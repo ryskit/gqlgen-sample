@@ -5,24 +5,36 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"github.com/gofrs/uuid"
+	"github.com/ryskit/gqlgen-sample/graph/generated"
+	"github.com/ryskit/gqlgen-sample/graph/model"
 	"github.com/ryskit/gqlgen-sample/models"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"log"
-	"math/rand"
-
-	"github.com/ryskit/gqlgen-sample/graph/generated"
-	"github.com/ryskit/gqlgen-sample/graph/model"
 )
 
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
+	u4, err := uuid.NewV4()
+	if err != nil {
+		log.Fatalf("failed to generate UUID: %v", err)
+	}
+
+	id := u4.String()
+	tD := &models.Todo{
+		ID:     id,
+		Text:   input.Text,
+		UserID: input.UserID,
+	}
+	err = tD.Insert(ctx, r.DB, boil.Infer())
+	if err != nil {
+		return nil, err
+	}
+
 	todo := &model.Todo{
 		Text:   input.Text,
-		ID:     fmt.Sprintf("T%d", rand.Int()),
+		ID:     id,
 		UserID: &input.UserID,
 	}
-	r.todos = append(r.todos, todo)
 	return todo, nil
 }
 
@@ -31,13 +43,12 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	if err != nil {
 		log.Fatalf("failed to generate UUID: %v", err)
 	}
-	log.Printf("generated Version 4 UUID %v", u4)
 
-	dU := &models.User{
+	uD := &models.User{
 		ID:   u4.String(),
 		Name: input.Name,
 	}
-	err = dU.Insert(ctx, r.DB, boil.Infer())
+	err = uD.Insert(ctx, r.DB, boil.Infer())
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +65,19 @@ func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	users, err := models.Users().All(ctx, r.DB)
+	if err != nil {
+		return nil, err
+	}
+	var us []*model.User
+	for _, u := range users {
+		uM := model.User{
+			ID:   u.ID,
+			Name: u.Name,
+		}
+		us = append(us, &uM)
+	}
+	return us, nil
 }
 
 func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (*model.User, error) {
