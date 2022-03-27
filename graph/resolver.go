@@ -1,6 +1,9 @@
 package graph
 
-import "github.com/ryskit/gqlgen-sample/graph/model"
+import (
+	"database/sql"
+	"github.com/ryskit/gqlgen-sample/graph/model"
+)
 
 // This file will not be regenerated automatically.
 //
@@ -8,4 +11,5 @@ import "github.com/ryskit/gqlgen-sample/graph/model"
 
 type Resolver struct {
 	todos []*model.Todo
+	DB    *sql.DB
 }
