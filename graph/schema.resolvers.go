@@ -5,86 +5,28 @@ package graph
 
 import (
 	"context"
-	"github.com/gofrs/uuid"
 	"github.com/ryskit/gqlgen-sample/graph/generated"
 	"github.com/ryskit/gqlgen-sample/graph/model"
-	"github.com/ryskit/gqlgen-sample/models"
-	"github.com/volatiletech/sqlboiler/v4/boil"
-	"log"
 )
 
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	u4, err := uuid.NewV4()
-	if err != nil {
-		log.Fatalf("failed to generate UUID: %v", err)
-	}
-
-	id := u4.String()
-	tD := &models.Todo{
-		ID:     id,
-		Text:   input.Text,
-		UserID: input.UserID,
-	}
-	err = tD.Insert(ctx, r.DB, boil.Infer())
-	if err != nil {
-		return nil, err
-	}
-
-	todo := &model.Todo{
-		Text:   input.Text,
-		ID:     id,
-		UserID: &input.UserID,
-	}
-	return todo, nil
+	return r.createTodo(ctx, input)
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
-	u4, err := uuid.NewV4()
-	if err != nil {
-		log.Fatalf("failed to generate UUID: %v", err)
-	}
-
-	uD := &models.User{
-		ID:   u4.String(),
-		Name: input.Name,
-	}
-	err = uD.Insert(ctx, r.DB, boil.Infer())
-	if err != nil {
-		return nil, err
-	}
-
-	u := &model.User{
-		ID:   u4.String(),
-		Name: input.Name,
-	}
-	return u, nil
+	return r.createUser(ctx, input)
 }
 
 func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	return r.todos, nil
+	return r.queryTodos(ctx)
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	users, err := models.Users().All(ctx, r.DB)
-	if err != nil {
-		return nil, err
-	}
-	var us []*model.User
-	for _, u := range users {
-		uM := model.User{
-			ID:   u.ID,
-			Name: u.Name,
-		}
-		us = append(us, &uM)
-	}
-	return us, nil
+	return r.queryUsers(ctx)
 }
 
 func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (*model.User, error) {
-	return &model.User{
-		ID:   *obj.UserID,
-		Name: "user " + *obj.UserID,
-	}, nil
+	return r.relationTodoUser(ctx, obj)
 }
 
 // Mutation returns generated.MutationResolver implementation.
