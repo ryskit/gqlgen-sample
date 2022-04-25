@@ -5,7 +5,7 @@
 1. PostgreSQLコンテナを起動
     ```shell
      $ docker run --name postgres \
-            -e POSTGRES_PASSWORD=password \
+            -e POSTGRES_PASSWORD=postgres \
             -e POSTGRES_INITDB_ARGS="--encoding=UTF8 --no-locale" \
             -e TZ=Asia/Tokyo \
             -v postgresdb:/var/lib/postgresql/data \
